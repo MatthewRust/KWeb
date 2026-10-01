@@ -17,22 +17,38 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-kweb}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set in .env}
+      - POSTGRES_DB=${POSTGRES_DB:-kweb}
     # Exposed for direct API testing; the frontend reaches it internally via http://backend:3000
     ports:
       - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
-  # Postgres — to be enabled once we decide what needs a database.
-  # db:
-  #   image: postgres:17-alpine
-  #   container_name: kweb-db
-  #   environment:
-  #     POSTGRES_USER: ${POSTGRES_USER:-kweb}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
-  #     POSTGRES_DB: ${POSTGRES_DB:-kweb}
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-  #   restart: unless-stopped
+  # The backend creates the tables and the default user on startup (backend/src/db/migrations).
+  db:
+    image: postgres:17-alpine
+    container_name: kweb-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kweb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-kweb}
+    # Exposed on this machine only, for a locally run backend (npm run dev) or a database client
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
-# volumes:
-#   pgdata:
+volumes:
+  pgdata:
