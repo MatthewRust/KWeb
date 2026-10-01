@@ -1,0 +1,38 @@
+name: kweb
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: kweb-frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: kweb-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    # Exposed for direct API testing; the frontend reaches it internally via http://backend:3000
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    restart: unless-stopped
+
+  # Postgres — to be enabled once we decide what needs a database.
+  # db:
+  #   image: postgres:17-alpine
+  #   container_name: kweb-db
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-kweb}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+  #     POSTGRES_DB: ${POSTGRES_DB:-kweb}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   pgdata:
