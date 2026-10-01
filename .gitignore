@@ -1,6 +1,9 @@
 # Project context (images, notes, AGENTS.md) — kept local only
 context/
 
+# Claude Code local settings
+.claude/
+
 # Dependencies
 node_modules/
 
