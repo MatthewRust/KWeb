@@ -1,27 +1,20 @@
-import { Link, NavLink } from 'react-router';
+import { NavLink } from 'react-router';
+import { PAGES } from '../site.js';
+import Circled from './marks/Circled.jsx';
 
-const links = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/essays', label: 'Essays' },
-  { to: '/gallery', label: 'Gallery' },
-  { to: '/about', label: 'About' },
-];
-
+// Plain words spread across the grid (Samson Leung's nav); the current page gets a hand-drawn ring.
 export default function Nav() {
   return (
-    <header>
-      <nav className="flex items-center justify-between p-4">
-        <Link to="/">Kirsty</Link>
-        <ul className="flex gap-4">
-          {links.map(({ to, label, end }) => (
-            <li key={to}>
-              <NavLink to={to} end={end} className={({ isActive }) => (isActive ? 'underline' : '')}>
-                {label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </header>
+    <nav aria-label="Main">
+      <ul className="grid grid-cols-4 py-4 font-sans text-[1.0625rem] font-medium md:text-lg">
+        {PAGES.map(({ to, label, end }) => (
+          <li key={to}>
+            <NavLink to={to} end={end} className="inline-block text-ultramarine transition-colors hover:text-ultramarine-deep active:translate-y-px">
+              {({ isActive }) => (isActive ? <Circled>{label}</Circled> : label)}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

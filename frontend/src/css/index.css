@@ -1,1 +1,184 @@
 @import "tailwindcss";
+
+/* Design tokens — see context/STYLE_GUIDE.md §5 (colour) and §6 (type). */
+@theme {
+  /* paper */
+  --color-paper: #f5f3ee;
+  --color-paper-bright: #fcfbf8;
+  --color-newsprint: #ebe7db;
+  --color-rule: #d8d3c6;
+  /* ink */
+  --color-ink: #1e1c19;
+  --color-ink-soft: #4a4640;
+  --color-graphite: #6b675f;
+  --color-pencil: #9a968c;
+  /* the one blue */
+  --color-ultramarine: #2b38a6;
+  --color-ultramarine-deep: #1f2a80;
+  --color-ultramarine-wash: #dde0f2;
+  /* earth pigments: accents only */
+  --color-ochre: #e1a04b;
+  --color-terracotta: #a94b35;
+  --color-sienna: #7f3b2b;
+  --color-rose: #da937f;
+
+  --font-serif: "EB Garamond Variable", "EB Garamond", ui-serif, Georgia, serif;
+  --font-sans: "Archivo Variable", "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-hand: "Patrick Hand", cursive;
+
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.12em;
+  --text-label--font-weight: 600;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-caption: 0.9375rem;
+  --text-caption--line-height: 1.4;
+  --text-body: clamp(1.1875rem, 1.1rem + 0.3vw, 1.25rem);
+  --text-body--line-height: 1.55;
+  --text-lede: clamp(1.375rem, 1.15rem + 0.9vw, 1.75rem);
+  --text-lede--line-height: 1.35;
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.2;
+  --text-h2: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+  --text-h2--line-height: 1.1;
+  --text-h2--letter-spacing: -0.01em;
+  --text-note: 1.375rem;
+  --text-note--line-height: 1.15;
+
+  --shadow-print: 0 1px 1px rgb(30 28 25 / 0.08), 0 10px 24px -8px rgb(30 28 25 / 0.28);
+  --shadow-print-lift: 0 2px 2px rgb(30 28 25 / 0.08), 0 18px 32px -10px rgb(30 28 25 / 0.32);
+
+  --ease-paper: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    /* Paper grain: a tiled noise tile at a few percent (§10). */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .11 0 0 0 0 .1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.1'/%3E%3C/svg%3E");
+    color: var(--color-ink);
+    font-family: var(--font-serif);
+    font-variant-numeric: oldstyle-nums proportional-nums;
+  }
+
+  /* Avoid one-word last lines in running text, where the browser supports it. */
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-ultramarine-wash);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ultramarine);
+    outline-offset: 3px;
+  }
+}
+
+/* Page frame: 1440px max, 20 / 32 / 56px side margins (§7). */
+@utility page-width {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 3.5rem;
+  }
+}
+
+@layer components {
+  /* Paper objects laid on the page (§8, §10): warm shadow, a small tilt, lift on hover. */
+  .paper {
+    rotate: var(--tilt, 0deg);
+    box-shadow: var(--shadow-print);
+    transition:
+      rotate 300ms var(--ease-paper),
+      translate 300ms var(--ease-paper),
+      box-shadow 300ms var(--ease-paper);
+  }
+  .paper:hover {
+    rotate: calc(var(--tilt, 0deg) * 0.25);
+    translate: 0 -2px;
+    box-shadow: var(--shadow-print-lift);
+  }
+
+  /* Translucent masking tape with torn ends, stuck across a top edge. */
+  .tape {
+    position: absolute;
+    top: -0.8rem;
+    left: 50%;
+    width: 6.5rem;
+    height: 1.6rem;
+    translate: -50% 0;
+    rotate: var(--tape-tilt, -3deg);
+    background-color: rgb(232 224 203 / 0.75);
+    clip-path: polygon(0 10%, 4% 0, 96% 6%, 100% 0, 97% 30%, 100% 55%, 96% 78%, 100% 100%, 3% 94%, 0 100%, 4% 70%, 0 46%, 3% 24%);
+  }
+
+  /* Hand marks use pathLength="1", so a 1-unit dash reveals the whole stroke. */
+  .draw,
+  .hover-draw {
+    stroke-dasharray: 1;
+  }
+  .hover-draw {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  .group:is(:hover, :focus-visible) .hover-draw {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+/* Motion (§12): objects settle, text rises and marks draw in, once, when their section scrolls into view.
+   Screen only, so a printed page never comes out with unrevealed (invisible) sections. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .reveal:not([data-inview]) :is(.settle, .rise, .draw) {
+    opacity: 0;
+  }
+  .reveal[data-inview] .settle {
+    animation: settle 700ms var(--ease-paper) var(--delay, 0ms) backwards;
+  }
+  .reveal[data-inview] .rise {
+    animation: rise 700ms var(--ease-paper) var(--delay, 0ms) backwards;
+  }
+  .reveal[data-inview] .draw {
+    animation: draw var(--draw, 600ms) var(--ease-paper) var(--delay, 0ms) backwards;
+  }
+  .hover-draw {
+    transition:
+      stroke-dashoffset 450ms var(--ease-paper),
+      opacity 100ms;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+    rotate: calc(var(--tilt, 0deg) + 2deg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+}
