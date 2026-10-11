@@ -15,7 +15,7 @@ Frontend code lives in `frontend/src/`:
 src/
 ├─ main.jsx        # Entry point
 ├─ App.jsx         # Routes
-├─ pages/          # One JSX file per page (Home, Essays, Gallery, About)
+├─ pages/          # One JSX file per page (Home, Essays, Essay, Reviews, Review, Gallery, About, Login, Add)
 ├─ components/     # Shared JSX (Layout, Nav, Footer)
 └─ css/            # Stylesheets (Tailwind entry)
 ```
@@ -24,7 +24,10 @@ Backend code lives in `backend/src/`:
 
 ```
 src/
-├─ server.js       # Express app and API routes
+├─ server.js       # Starts the app: runs migrations, then listens
+├─ app.js          # Express app and API routes
+├─ auth.js         # Login sessions
+├─ content.js      # Essays and reviews: reading and adding
 └─ db/
    ├─ pool.js      # Postgres connection
    ├─ migrate.js   # Applies new migrations on startup
@@ -35,19 +38,23 @@ src/
 
 PostgreSQL runs as the `db` service in Docker. When the backend starts it applies any new files in
 `backend/src/db/migrations/`, in order, and records them in a `schema_migrations` table so each runs once.
-To change the schema, add a new numbered file; never edit one that has already run.
+These migrations are development scaffolding; they will be collapsed into one file per table before the site is finished.
 
-| Table     | Columns |
-|-----------|---------|
-| `users`   | `id`, `name` (unique), `password_hash` (bcrypt), `created_at` |
-| `content` | `id`, `kind` (`essay` or `reading`), `title`, `body`, `author` (optional), `created_at`, `updated_at` |
+| Table      | Columns |
+|------------|---------|
+| `users`    | `id`, `name` (unique), `password_hash` (bcrypt), `created_at` |
+| `sessions` | `token`, `user_id`, `created_at`, `expires_at` |
+| `content`  | `id`, `kind` (`essay` or `review`), `number` (per kind), `title`, `body`, `subsection` (essays), `bibliography` (essays), `item_title`, `item_author`, `item_url` (reviews), `published_on`, `created_at`, `updated_at` |
 
-A default user is created: name `user`, password `1234`. Change it before the site goes public.
+Test logins: `user` / `1234`, `admin` / `admin`, `kirsty` / `kirsty`. Change them before the site goes public.
+The login page is at `/login` and isn't linked from the site.
 
 API:
 
-- `GET /api/essays`: all essays, newest first
-- `GET /api/reading`: all reading entries, newest first
+- `GET /api/essays`, `GET /api/essays/:number`: essays, newest first / one essay
+- `GET /api/reviews`, `GET /api/reviews/:number`: reviews, newest first / one review
+- `POST /api/content`: add an essay or review (logged in only)
+- `POST /api/login`, `POST /api/logout`, `GET /api/me`
 
 Planned work is listed in [TODO.md](TODO.md).
 
@@ -90,3 +97,21 @@ npm run dev
 ```
 
 Then open http://localhost:5173. Vite hot-reloads changes and proxies `/api` to the backend on port 3000.
+
+## Tests (PowerShell)
+
+Backend API tests: logging in, adding essays and reviews (including blank and invalid input), numbering, reading them back.
+They need the database running and use their own `kweb_test` database, recreated on each run, so dev data is untouched.
+
+```powershell
+docker compose up -d db
+cd backend
+npm test
+```
+
+Frontend tests (the date, number and page helpers; no database needed):
+
+```powershell
+cd frontend
+npm test
+```
