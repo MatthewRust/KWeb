@@ -11,9 +11,10 @@ export default function Nav() {
 
   return (
     <nav aria-label="Main">
+      {/* On phones the words simply wrap; from tablet width they spread across a grid, one column each. */}
       <ul
-        className="grid py-4 font-sans text-[1.0625rem] font-medium md:text-lg"
-        style={{ gridTemplateColumns: `repeat(${pages.length + (user ? 1 : 0)}, minmax(0, 1fr))` }}
+        className="flex flex-wrap gap-x-5 gap-y-1 py-4 font-sans text-[1.0625rem] font-medium md:grid md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:text-lg"
+        style={{ '--cols': pages.length + (user ? 1 : 0) }}
       >
         {pages.map(({ to, label, end }) => (
           <li key={to}>
