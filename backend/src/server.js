@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { pool } from './db/pool.js';
 import { migrate } from './db/migrate.js';
-import { loadUser, login, logout, me } from './auth.js';
+import { loadUser, login, logout, me, requireAuth } from './auth.js';
+import { createContent } from './content.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,23 +25,27 @@ app.get('/api/health', async (req, res) => {
 
 app.get('/api/essays', async (req, res) => {
   const { rows } = await pool.query(`
-    SELECT id, title, body, created_at AS "createdAt", updated_at AS "updatedAt"
+    SELECT id, number, title, subsection, body, to_char(published_on, 'YYYY-MM') AS "publishedOn",
+           created_at AS "createdAt", updated_at AS "updatedAt"
     FROM content
     WHERE kind = 'essay'
-    ORDER BY created_at DESC
+    ORDER BY published_on DESC, number DESC
   `);
   res.json(rows);
 });
 
-app.get('/api/reading', async (req, res) => {
+app.get('/api/reviews', async (req, res) => {
   const { rows } = await pool.query(`
-    SELECT id, title, author, body, created_at AS "createdAt", updated_at AS "updatedAt"
+    SELECT id, number, title, item_title AS "itemTitle", item_author AS "itemAuthor", body,
+           to_char(published_on, 'YYYY-MM') AS "publishedOn", created_at AS "createdAt", updated_at AS "updatedAt"
     FROM content
-    WHERE kind = 'reading'
-    ORDER BY created_at DESC
+    WHERE kind = 'review'
+    ORDER BY published_on DESC, number DESC
   `);
   res.json(rows);
 });
+
+app.post('/api/content', requireAuth, createContent);
 
 // Login for managing content. The login page is at /login on the frontend and isn't linked anywhere.
 app.post('/api/login', login);

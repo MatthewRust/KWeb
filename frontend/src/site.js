@@ -21,3 +21,13 @@ export function pageFor(pathname) {
   const path = pathname.replace(/\/+$/, '') || '/';
   return [...PAGES, ...ADMIN_PAGES, ...HIDDEN_PAGES].find(({ to }) => to === path) ?? NOT_FOUND;
 }
+
+// Essay subsections. Must match the CHECK on content.subsection (backend/src/db/migrations/005_essays_and_reviews.sql).
+export const SUBSECTIONS = ['archaeology', 'fieldwork', 'art history'];
+
+// 'YYYY-MM' → "Sep ’26", the short date shown on every essay and review.
+export function formatPublished(yearMonth) {
+  const [year, month] = yearMonth.split('-').map(Number);
+  const name = new Date(year, month - 1).toLocaleDateString('en-GB', { month: 'short' });
+  return `${name.slice(0, 3)} ’${String(year).slice(-2)}`;
+}
