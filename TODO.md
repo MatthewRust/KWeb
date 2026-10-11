@@ -2,12 +2,10 @@
 
 Work that has been planned but not started yet.
 
-## Hidden login page
+## Session cookie over HTTPS
 
-- A login page at a route that is not linked from the nav, so only people who know the URL find it.
-- Backend: `POST /api/login` that checks the name and password against the `users` table
-  (`WHERE name = $1 AND password_hash = crypt($2, password_hash)`) and starts a session.
-- Protect every route that creates, edits or deletes content so it only works when logged in.
+- The session cookie is not marked `secure`, because the site is served over plain HTTP for now.
+  Once it is behind HTTPS, add `secure: true` to `cookieOptions` in `backend/src/auth.js`.
 
 ## Change the default login
 
@@ -16,6 +14,8 @@ Work that has been planned but not started yet.
 
 ## Forms for posting content (behind the login)
 
+- Build them on the `/add` page (`frontend/src/pages/Add.jsx`, currently blank).
+- Put `requireAuth` (`backend/src/auth.js`) in front of every route that creates, edits or deletes content.
 - A form to create and edit **essays**: title, text.
 - A form to create and edit **what I've been reading** entries: title, author, thoughts.
 - Backend routes to create, update and delete rows in the `content` table.
