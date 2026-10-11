@@ -3,7 +3,7 @@ import cors from 'cors';
 import { pool } from './db/pool.js';
 import { migrate } from './db/migrate.js';
 import { loadUser, login, logout, me, requireAuth } from './auth.js';
-import { createContent } from './content.js';
+import { createContent, getEssay, getReview, listEssays, listReviews } from './content.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,28 +23,10 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.get('/api/essays', async (req, res) => {
-  const { rows } = await pool.query(`
-    SELECT id, number, title, subsection, body, to_char(published_on, 'YYYY-MM') AS "publishedOn",
-           created_at AS "createdAt", updated_at AS "updatedAt"
-    FROM content
-    WHERE kind = 'essay'
-    ORDER BY published_on DESC, number DESC
-  `);
-  res.json(rows);
-});
-
-app.get('/api/reviews', async (req, res) => {
-  const { rows } = await pool.query(`
-    SELECT id, number, title, item_title AS "itemTitle", item_author AS "itemAuthor", body,
-           to_char(published_on, 'YYYY-MM') AS "publishedOn", created_at AS "createdAt", updated_at AS "updatedAt"
-    FROM content
-    WHERE kind = 'review'
-    ORDER BY published_on DESC, number DESC
-  `);
-  res.json(rows);
-});
-
+app.get('/api/essays', listEssays);
+app.get('/api/essays/:number', getEssay);
+app.get('/api/reviews', listReviews);
+app.get('/api/reviews/:number', getReview);
 app.post('/api/content', requireAuth, createContent);
 
 // Login for managing content. The login page is at /login on the frontend and isn't linked anywhere.
