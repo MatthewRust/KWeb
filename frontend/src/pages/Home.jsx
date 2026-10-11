@@ -10,7 +10,13 @@ import Print from '../components/paper/Print.jsx';
 import PhotoPlaceholder from '../components/paper/PhotoPlaceholder.jsx';
 import Clipping from '../components/paper/Clipping.jsx';
 import StickyNote from '../components/paper/StickyNote.jsx';
-import { expeditions, latestEssays, reading } from '../data/sample.js';
+import ArticleText from '../components/ArticleText.jsx';
+import { expeditions } from '../data/sample.js';
+import { useApi } from '../api.js';
+import { formatNumber, formatPublished } from '../site.js';
+
+const LATEST_ESSAYS = 3;
+const actionClass = 'font-sans text-label uppercase text-ultramarine transition-colors hover:text-ultramarine-deep';
 
 export default function Home() {
   return (
@@ -80,47 +86,80 @@ function RecentExpeditions() {
   );
 }
 
+// The newest few essays from the database, as index rows that open the full essay.
 function LatestEssays() {
+  const { data: essays, error } = useApi('/api/essays');
+
   return (
     <Reveal className="pb-24 md:pb-32" aria-labelledby="essays-heading">
       <SectionHeading
         id="essays-heading"
         action={
-          <Link to="/essays" className="font-sans text-label uppercase text-ultramarine transition-colors hover:text-ultramarine-deep">
+          <Link to="/essays" className={actionClass}>
             → All essays
           </Link>
         }
       >
         latest essays
       </SectionHeading>
-      <ol className="mt-6 divide-y divide-rule border-b border-rule">
-        {latestEssays.map((essay, i) => (
-          <IndexRow key={essay.number} {...essay} delay={i * 90} />
-        ))}
-      </ol>
+      {error && <p className="mt-6 font-sans text-meta text-terracotta">{error}</p>}
+      {essays?.length === 0 && <p className="mt-6 text-body text-ink-soft">No essays yet.</p>}
+      {essays?.length > 0 && (
+        <ol className="mt-6 divide-y divide-rule border-b border-rule">
+          {essays.slice(0, LATEST_ESSAYS).map((essay, i) => (
+            <IndexRow
+              key={essay.id}
+              number={formatNumber(essay.number)}
+              title={essay.title}
+              theme={essay.subsection}
+              date={formatPublished(essay.publishedOn)}
+              to={`/essays/${essay.number}`}
+              delay={i * 90}
+            />
+          ))}
+        </ol>
+      )}
     </Reveal>
   );
 }
 
-// The paper Kirsty is reading at the moment, and her thoughts on it.
+// The latest review: what Kirsty read and who wrote it, then the opening of her review, linking to the whole thing.
 function Reading() {
-  const { paper, author, thoughts } = reading;
+  const { data: reviews, error } = useApi('/api/reviews');
+  const latest = reviews?.[0];
+  const { data: review } = useApi(latest ? `/api/reviews/${latest.number}` : null);
 
   return (
     <Reveal className="pb-24 md:pb-32" aria-labelledby="reading-heading">
-      <SectionHeading id="reading-heading">what i’ve been reading</SectionHeading>
-      <div className="mt-10 grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-6">
-        <dl className="rise grid grid-cols-[5.5rem_1fr] items-baseline gap-x-6 gap-y-4 md:col-span-6 lg:col-span-5">
-          <dt className="font-sans text-label uppercase text-graphite">Paper</dt>
-          <dd className="text-h2 italic">{paper}</dd>
-          <dt className="font-sans text-label uppercase text-graphite">Author</dt>
-          <dd className="text-lede">{author}</dd>
-        </dl>
-        <div className="rise md:col-span-6 lg:col-start-7" style={{ '--delay': '150ms' }}>
-          <h3 className="text-h3">thoughts</h3>
-          <p className="mt-3 max-w-[60ch] text-body">{thoughts}</p>
+      <SectionHeading
+        id="reading-heading"
+        action={
+          <Link to="/reviews" className={actionClass}>
+            → All reviews
+          </Link>
+        }
+      >
+        what i’ve been reading
+      </SectionHeading>
+      {error && <p className="mt-6 font-sans text-meta text-terracotta">{error}</p>}
+      {reviews?.length === 0 && <p className="mt-6 text-body text-ink-soft">No reviews yet.</p>}
+      {review && (
+        <div className="mt-10 grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-6">
+          <dl className="rise grid grid-cols-[6.5rem_1fr] items-baseline gap-x-6 gap-y-4 md:col-span-6 lg:col-span-5">
+            <dt className="font-sans text-label uppercase text-graphite">Reviewing</dt>
+            <dd className="text-h2 italic">{review.itemTitle}</dd>
+            <dt className="font-sans text-label uppercase text-graphite">Author</dt>
+            <dd className="text-lede">{review.itemAuthor}</dd>
+          </dl>
+          <div className="rise md:col-span-6 lg:col-start-7" style={{ '--delay': '150ms' }}>
+            <h3 className="text-h3">{review.title}</h3>
+            <ArticleText body={review.body} className="mt-3 line-clamp-6" />
+            <Link to={`/reviews/${review.number}`} className={`mt-5 inline-block ${actionClass}`}>
+              Read the review →
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
     </Reveal>
   );
 }

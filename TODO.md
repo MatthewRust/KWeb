@@ -18,11 +18,6 @@ Work that has been planned but not started yet.
 - The `/add` form can create essays and reviews (`POST /api/content`). There is no way yet to edit or delete them.
 - Put `requireAuth` (`backend/src/auth.js`) in front of those routes too.
 
-## Show database content on the site
-
-- Replace the sample text in `frontend/src/data/sample.js` with data from `GET /api/essays` and `GET /api/reviews`.
-- Show dates with `formatPublished` (`frontend/src/site.js`), e.g. Sep ’26.
-
 ## Consolidate the database definition (before finishing)
 
 - `backend/src/db/migrations/` currently holds the development history (001-005). Replace it with one SQL file per table
