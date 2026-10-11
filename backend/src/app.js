@@ -4,6 +4,7 @@ import cors from 'cors';
 import { pool } from './db/pool.js';
 import { loadUser, login, logout, me, requireAuth } from './auth.js';
 import { createContent, getEssay, getReview, listEssays, listReviews } from './content.js';
+import { MAX_FILE_MB, createImage, listImages, receiveImage } from './images.js';
 
 export const app = express();
 
@@ -27,6 +28,9 @@ app.get('/api/essays/:number', getEssay);
 app.get('/api/reviews', listReviews);
 app.get('/api/reviews/:number', getReview);
 app.post('/api/content', requireAuth, createContent);
+app.get('/api/images', listImages);
+// requireAuth comes first so a file from someone not logged in is never read.
+app.post('/api/images', requireAuth, receiveImage, createImage);
 
 // Login for managing content. The login page is at /login on the frontend and isn't linked anywhere.
 app.post('/api/login', login);
@@ -39,6 +43,8 @@ app.use('/api', (req, res) => {
 
 app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid JSON' });
+  if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: `The image can be at most ${MAX_FILE_MB} MB` });
+  if (err.name === 'MulterError') return res.status(400).json({ error: err.message });
   console.error(err);
   res.status(500).json({ error: 'Internal server error' });
 });

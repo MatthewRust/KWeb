@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SUBSECTIONS, formatPublished } from '../site.js';
 import { buttonClass, inputClass, labelClass } from '../formStyles.js';
+import ImageUploadForm from '../components/ImageUploadForm.jsx';
 
 function thisMonth() {
   const now = new Date();
@@ -10,9 +11,54 @@ function thisMonth() {
 const EMPTY = { title: '', body: '', subsection: SUBSECTIONS[0], itemTitle: '', itemAuthor: '', itemUrl: '' };
 const EMPTY_SOURCE = { name: '', url: '' };
 
-// Logged-in only. Adds an essay or a review to the content table.
+const TABS = ['essay', 'review', 'image'];
+
+// Logged-in only. Tabs for adding an essay, a review or a gallery image.
+// Both forms stay mounted (just hidden) so switching tabs never loses what has been typed.
 export default function Add() {
-  const [kind, setKind] = useState('essay');
+  const [tab, setTab] = useState('essay');
+  const [contentKind, setContentKind] = useState('essay'); // the last of essay / review, kept while on the image tab
+
+  function choose(name) {
+    setTab(name);
+    if (name !== 'image') setContentKind(name);
+  }
+
+  return (
+    <section className="py-12">
+      <h1 className="text-h2">Add</h1>
+
+      <div role="tablist" aria-label="What to add" className="mt-8 flex max-w-2xl gap-6 border-b border-rule">
+        {TABS.map((name) => (
+          <button
+            key={name}
+            type="button"
+            role="tab"
+            id={`tab-${name}`}
+            aria-selected={tab === name}
+            aria-controls={name === 'image' ? 'panel-image' : 'panel-content'}
+            onClick={() => choose(name)}
+            className={`-mb-px cursor-pointer border-b-2 pb-2 font-sans text-label uppercase transition-colors ${
+              tab === name ? 'border-ultramarine text-ink' : 'border-transparent text-graphite hover:text-ink'
+            }`}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+
+      <div role="tabpanel" id="panel-content" aria-labelledby={`tab-${tab}`} hidden={tab === 'image'}>
+        <ContentForm kind={contentKind} />
+      </div>
+      <div role="tabpanel" id="panel-image" aria-labelledby="tab-image" hidden={tab !== 'image'}>
+        <ImageUploadForm />
+      </div>
+    </section>
+  );
+}
+
+// Adds an essay or a review to the content table.
+function ContentForm({ kind }) {
   const [fields, setFields] = useState(EMPTY);
   const [publishedOn, setPublishedOn] = useState(thisMonth);
   const [bibliography, setBibliography] = useState([]);
@@ -55,106 +101,92 @@ export default function Add() {
   }
 
   return (
-    <section className="py-12">
-      <h1 className="text-h2">Add</h1>
+    <form onSubmit={handleSubmit} className="mt-8 flex max-w-2xl flex-col gap-5">
+      <label className={labelClass}>
+        {kind === 'essay' ? 'Title' : 'Review title'}
+        <input required className={inputClass} {...field('title')} />
+      </label>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex max-w-2xl flex-col gap-5">
-        <fieldset className="flex gap-6 font-sans text-label uppercase">
-          <legend className="sr-only">Type</legend>
-          {['essay', 'review'].map((value) => (
-            <label key={value} className="flex cursor-pointer items-center gap-2">
-              <input type="radio" name="kind" value={value} checked={kind === value} onChange={() => setKind(value)} className="accent-ultramarine" />
-              {value}
-            </label>
-          ))}
-        </fieldset>
-
+      {kind === 'essay' ? (
         <label className={labelClass}>
-          {kind === 'essay' ? 'Title' : 'Review title'}
-          <input required className={inputClass} {...field('title')} />
-        </label>
-
-        {kind === 'essay' ? (
-          <label className={labelClass}>
-            Subsection
-            <select className={inputClass} {...field('subsection')}>
-              {SUBSECTIONS.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <>
-            <label className={labelClass}>
-              Title of the item reviewed
-              <input required className={inputClass} {...field('itemTitle')} />
-            </label>
-            <label className={labelClass}>
-              Author of the item reviewed
-              <input required className={inputClass} {...field('itemAuthor')} />
-            </label>
-            <label className={labelClass}>
-              Link to the original, optional
-              <input type="url" placeholder="https://" className={inputClass} {...field('itemUrl')} />
-            </label>
-          </>
-        )}
-
-        <label className={labelClass}>
-          Date published
-          <input type="month" required value={publishedOn} onChange={(e) => setPublishedOn(e.target.value)} className={`${inputClass} self-start`} />
-        </label>
-
-        <label className={labelClass}>
-          Text
-          <textarea required rows={16} className={inputClass} {...field('body')} />
-        </label>
-
-        {kind === 'essay' && (
-          <fieldset className="flex flex-col gap-4 border-t border-rule pt-4">
-            <legend className="float-left mb-1 font-sans text-label uppercase">Bibliography</legend>
-            {bibliography.map((item, i) => (
-              <div key={i} className="grid grid-cols-1 gap-3 border-b border-rule pb-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                <label className={labelClass}>
-                  Name
-                  <input required className={inputClass} {...sourceField(i, 'name')} />
-                </label>
-                <label className={labelClass}>
-                  Link
-                  <input type="url" required placeholder="https://" className={inputClass} {...sourceField(i, 'url')} />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setBibliography(bibliography.filter((_, j) => j !== i))}
-                  className="cursor-pointer self-start py-2 font-sans text-label uppercase text-terracotta hover:underline sm:self-end"
-                >
-                  Remove
-                </button>
-              </div>
+          Subsection
+          <select className={inputClass} {...field('subsection')}>
+            {SUBSECTIONS.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
             ))}
-            <button type="button" onClick={() => setBibliography([...bibliography, EMPTY_SOURCE])} className={buttonClass}>
-              + Add source
-            </button>
-          </fieldset>
-        )}
+          </select>
+        </label>
+      ) : (
+        <>
+          <label className={labelClass}>
+            Title of the item reviewed
+            <input required className={inputClass} {...field('itemTitle')} />
+          </label>
+          <label className={labelClass}>
+            Author of the item reviewed
+            <input required className={inputClass} {...field('itemAuthor')} />
+          </label>
+          <label className={labelClass}>
+            Link to the original, optional
+            <input type="url" placeholder="https://" className={inputClass} {...field('itemUrl')} />
+          </label>
+        </>
+      )}
 
-        {error && (
-          <p role="alert" className="font-sans text-meta text-terracotta">
-            {error}
-          </p>
-        )}
-        {saved && (
-          <p role="status" className="font-sans text-meta">
-            Saved “{saved.title}” as {saved.kind} {saved.number}, {formatPublished(saved.publishedOn)}. ID {saved.id}.
-          </p>
-        )}
+      <label className={labelClass}>
+        Date published
+        <input type="month" required value={publishedOn} onChange={(e) => setPublishedOn(e.target.value)} className={`${inputClass} self-start`} />
+      </label>
 
-        <button type="submit" disabled={saving} className={buttonClass}>
-          {saving ? 'Saving…' : `Add ${kind}`}
-        </button>
-      </form>
-    </section>
+      <label className={labelClass}>
+        Text
+        <textarea required rows={16} className={inputClass} {...field('body')} />
+      </label>
+
+      {kind === 'essay' && (
+        <fieldset className="flex flex-col gap-4 border-t border-rule pt-4">
+          <legend className="float-left mb-1 font-sans text-label uppercase">Bibliography</legend>
+          {bibliography.map((item, i) => (
+            <div key={i} className="grid grid-cols-1 gap-3 border-b border-rule pb-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <label className={labelClass}>
+                Name
+                <input required className={inputClass} {...sourceField(i, 'name')} />
+              </label>
+              <label className={labelClass}>
+                Link
+                <input type="url" required placeholder="https://" className={inputClass} {...sourceField(i, 'url')} />
+              </label>
+              <button
+                type="button"
+                onClick={() => setBibliography(bibliography.filter((_, j) => j !== i))}
+                className="cursor-pointer self-start py-2 font-sans text-label uppercase text-terracotta hover:underline sm:self-end"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setBibliography([...bibliography, EMPTY_SOURCE])} className={buttonClass}>
+            + Add source
+          </button>
+        </fieldset>
+      )}
+
+      {error && (
+        <p role="alert" className="font-sans text-meta text-terracotta">
+          {error}
+        </p>
+      )}
+      {saved && (
+        <p role="status" className="font-sans text-meta">
+          Saved “{saved.title}” as {saved.kind} {saved.number}, {formatPublished(saved.publishedOn)}. ID {saved.id}.
+        </p>
+      )}
+
+      <button type="submit" disabled={saving} className={buttonClass}>
+        {saving ? 'Saving…' : `Add ${kind}`}
+      </button>
+    </form>
   );
 }

@@ -274,3 +274,62 @@ describe('reading content', () => {
     }
   });
 });
+
+describe('gallery images', () => {
+  let cookie;
+  before(async () => {
+    cookie = await loginAs('admin', 'admin');
+  });
+
+  // A 1x1 transparent PNG, enough to stand in for a photo.
+  const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+
+  function upload({ file = PNG, type = 'image/png', name = 'photo.png', description, withCookie = true } = {}) {
+    const form = new FormData();
+    if (file) form.append('image', new Blob([file], { type }), name);
+    if (description !== undefined) form.append('description', description);
+    return fetch(`${base}/images`, { method: 'POST', body: form, headers: withCookie ? { Cookie: cookie } : {} });
+  }
+
+  test('uploading only works when logged in', async () => {
+    assert.equal((await upload({ withCookie: false })).status, 401);
+  });
+
+  test('a missing file, a non-image or a long description is rejected', async () => {
+    assert.equal((await upload({ file: null, description: 'no file' })).status, 400);
+    assert.equal((await upload({ file: Buffer.from('hello'), type: 'text/plain', name: 'notes.txt' })).status, 400);
+    const long = await upload({ description: 'x'.repeat(51) });
+    assert.equal(long.status, 400);
+    assert.match((await long.json()).error, /50 characters/);
+  });
+
+  test('the gallery lists images newest first, with resized Cloudinary URLs', async () => {
+    const url = 'https://res.cloudinary.com/demo/image/upload/v1/kweb/test.jpg';
+    await pool.query(
+      `INSERT INTO images (public_id, url, width, height, description, created_at) VALUES
+         ('kweb/older', $1, 800, 600, 'older', now() - interval '1 day'),
+         ('kweb/newer', $1, 600, 800, NULL, now())`,
+      [url]
+    );
+    const images = (await api('/images')).body;
+    assert.deepEqual(
+      images.map((i) => i.description),
+      [null, 'older']
+    );
+    assert.match(images[0].thumbUrl, /\/upload\/c_fill,[^/]*w_600,h_600[^/]*\/v1\/kweb\/test\.jpg$/);
+    assert.match(images[0].fullUrl, /\/upload\/c_limit,[^/]*\/v1\/kweb\/test\.jpg$/);
+    await pool.query('DELETE FROM images');
+  });
+
+  test(
+    'a real upload reaches Cloudinary and is saved',
+    { skip: !process.env.CLOUDINARY_URL && 'CLOUDINARY_URL is not set' },
+    async () => {
+      const res = await upload({ description: '  test upload  ' });
+      assert.equal(res.status, 201);
+      const image = await res.json();
+      assert.equal(image.description, 'test upload');
+      assert.match(image.thumbUrl, /^https:\/\/res\.cloudinary\.com\//);
+    }
+  );
+});
