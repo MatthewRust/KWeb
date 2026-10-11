@@ -22,6 +22,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-kweb}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set in .env}
       - POSTGRES_DB=${POSTGRES_DB:-kweb}
+      - CLOUDINARY_URL=${CLOUDINARY_URL:-}
     # Exposed for direct API testing; the frontend reaches it internally via http://backend:3000
     ports:
       - "${BACKEND_PORT:-3000}:3000"

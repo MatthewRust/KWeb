@@ -21,5 +21,11 @@ Work that has been planned but not started yet.
 ## Consolidate the database definition (before finishing)
 
 - `backend/src/db/migrations/` currently holds the development history (001-005). Replace it with one SQL file per table
-  (`users`, `sessions`, `content`) plus seed data, describing the final schema directly, with no step-by-step changes.
+  (`users`, `sessions`, `content`, `images`) plus seed data, describing the final schema directly, with no step-by-step changes.
 - Adjust `backend/src/db/migrate.js` to match, and reset the dev database once (`docker compose down -v`).
+
+## Gallery images
+
+- Add `CLOUDINARY_URL` to `.env` (see README) so uploads work.
+- There is no way yet to edit an image's description or delete an image. Deleting should also remove it from Cloudinary.
+- With `CLOUDINARY_URL` set, the backend test suite uploads a 1×1 test image to Cloudinary on each run and leaves it there.
