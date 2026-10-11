@@ -9,8 +9,9 @@ Work that has been planned but not started yet.
 
 ## Change the default login
 
-- The database is seeded with `user` / `1234` (`backend/src/db/migrations/002_seed_default_user.sql`).
-  Change the password, or replace the user, before the site goes public.
+- The database is seeded with test logins: `user` / `1234` (`002_seed_default_user.sql`), and `admin` / `admin` and
+  `kirsty` / `kirsty` (`004_seed_test_users.sql`), all in `backend/src/db/migrations/`.
+  Change the passwords, or remove the test users, before the site goes public.
 
 ## Forms for posting content (behind the login)
 

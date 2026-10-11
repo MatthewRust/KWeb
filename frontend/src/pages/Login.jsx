@@ -23,23 +23,32 @@ export default function Login() {
     }
   }
 
+  const label = 'flex flex-col gap-1.5 font-sans text-label uppercase';
+  const input = 'border border-ink bg-paper-bright px-3 py-2 font-serif text-body normal-case tracking-normal focus-visible:border-ultramarine';
+
   return (
-    <section>
-      <h1>Log in</h1>
-      <form onSubmit={handleSubmit}>
-        <p>
-          <label>
-            Name <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="username" required />
-          </label>
-        </p>
-        <p>
-          <label>
-            Password{' '}
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-          </label>
-        </p>
-        {error && <p role="alert">{error}</p>}
-        <button type="submit">Log in</button>
+    <section className="py-12">
+      <h1 className="text-h2">Log in</h1>
+      <form onSubmit={handleSubmit} className="mt-8 flex max-w-sm flex-col gap-5">
+        <label className={label}>
+          Name
+          <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="username" required className={input} />
+        </label>
+        <label className={label}>
+          Password
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required className={input} />
+        </label>
+        {error && (
+          <p role="alert" className="font-sans text-meta text-terracotta">
+            {error}
+          </p>
+        )}
+        <button
+          type="submit"
+          className="cursor-pointer self-start border border-ink px-5 py-2 font-sans text-label uppercase transition-colors hover:bg-ultramarine hover:text-paper-bright active:translate-y-px"
+        >
+          Log in
+        </button>
       </form>
     </section>
   );
