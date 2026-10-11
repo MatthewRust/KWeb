@@ -263,6 +263,11 @@ describe('reading content', () => {
     assert.equal(res.body.itemAuthor, 'An author');
   });
 
+  test('malformed JSON is a bad request, not a server error', async () => {
+    const res = await fetch(`${base}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name": ' });
+    assert.equal(res.status, 400);
+  });
+
   test('missing or nonsense numbers are a 404', async () => {
     for (const path of ['/essays/99', '/essays/0', '/essays/abc', '/reviews/99', '/reviews/abc', '/nothing-here']) {
       assert.equal((await api(path)).status, 404, path);
