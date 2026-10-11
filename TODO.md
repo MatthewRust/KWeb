@@ -13,14 +13,18 @@ Work that has been planned but not started yet.
   `kirsty` / `kirsty` (`004_seed_test_users.sql`), all in `backend/src/db/migrations/`.
   Change the passwords, or remove the test users, before the site goes public.
 
-## Forms for posting content (behind the login)
+## Editing and deleting content
 
-- Build them on the `/add` page (`frontend/src/pages/Add.jsx`, currently blank).
-- Put `requireAuth` (`backend/src/auth.js`) in front of every route that creates, edits or deletes content.
-- A form to create and edit **essays**: title, text.
-- A form to create and edit **what I've been reading** entries: title, author, thoughts.
-- Backend routes to create, update and delete rows in the `content` table.
+- The `/add` form can create essays and reviews (`POST /api/content`). There is no way yet to edit or delete them.
+- Put `requireAuth` (`backend/src/auth.js`) in front of those routes too.
 
 ## Show database content on the site
 
-- Replace the sample text in `frontend/src/data/sample.js` with data from `GET /api/essays` and `GET /api/reading`.
+- Replace the sample text in `frontend/src/data/sample.js` with data from `GET /api/essays` and `GET /api/reviews`.
+- Show dates with `formatPublished` (`frontend/src/site.js`), e.g. Sep ’26.
+
+## Consolidate the database definition (before finishing)
+
+- `backend/src/db/migrations/` currently holds the development history (001-005). Replace it with one SQL file per table
+  (`users`, `sessions`, `content`) plus seed data, describing the final schema directly, with no step-by-step changes.
+- Adjust `backend/src/db/migrate.js` to match, and reset the dev database once (`docker compose down -v`).

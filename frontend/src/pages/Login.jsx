@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { useAuth } from '../auth.jsx';
+import { buttonClass, inputClass, labelClass } from '../formStyles.js';
 
 // Hidden page: not linked from the nav, reached by going to /login directly.
 export default function Login() {
@@ -23,30 +24,24 @@ export default function Login() {
     }
   }
 
-  const label = 'flex flex-col gap-1.5 font-sans text-label uppercase';
-  const input = 'border border-ink bg-paper-bright px-3 py-2 font-serif text-body normal-case tracking-normal focus-visible:border-ultramarine';
-
   return (
     <section className="py-12">
       <h1 className="text-h2">Log in</h1>
       <form onSubmit={handleSubmit} className="mt-8 flex max-w-sm flex-col gap-5">
-        <label className={label}>
+        <label className={labelClass}>
           Name
-          <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="username" required className={input} />
+          <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="username" required className={inputClass} />
         </label>
-        <label className={label}>
+        <label className={labelClass}>
           Password
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required className={input} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required className={inputClass} />
         </label>
         {error && (
           <p role="alert" className="font-sans text-meta text-terracotta">
             {error}
           </p>
         )}
-        <button
-          type="submit"
-          className="cursor-pointer self-start border border-ink px-5 py-2 font-sans text-label uppercase transition-colors hover:bg-ultramarine hover:text-paper-bright active:translate-y-px"
-        >
+        <button type="submit" className={buttonClass}>
           Log in
         </button>
       </form>
